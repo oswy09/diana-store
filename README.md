@@ -1,6 +1,177 @@
-# Di Store - Tienda de Ropa Headless
+# 🛍️ Di Store
 
-Aplicación e-commerce headless con WordPress/WooCommerce como backend y Nuxt 3 como frontend. Los clientes pueden seleccionar productos, agregarlos al carrito y enviar cotizaciones directamente por WhatsApp.
+Una tienda en línea moderna desarrollada con Nuxt.js 3 que se integra con WooCommerce y permite realizar pedidos directamente a través de WhatsApp.
+
+## ✨ Características
+
+- **🛒 Carrito de Compras**: Sistema completo de carrito con persistencia local
+- **📱 Pedidos por WhatsApp**: Envío directo de cotizaciones al WhatsApp de la tienda
+- **🎯 Categorías Dinámicas**: Menú que se actualiza automáticamente desde WooCommerce
+- **📦 Integración WooCommerce**: Productos y categorías cargados desde tu tienda WooCommerce
+- **🎨 Diseño Responsivo**: Interfaz moderna con Tailwind CSS
+- **⚡ Alto Rendimiento**: Construido con Nuxt.js 3 y Vite
+
+## 🚀 Tecnologías Utilizadas
+
+- **Frontend**: Nuxt.js 3, Vue 3, Tailwind CSS
+- **Backend**: Nitro Server, WooCommerce REST API
+- **Estado**: Pinia Store Management
+- **Base de Datos**: Supabase (configurado pero no usado actualmente)
+- **Mensajería**: WhatsApp Business API
+
+## 📦 Instalación
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone https://github.com/oswy09/diana-store.git
+   cd diana-store
+   ```
+
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+
+3. **Configurar variables de entorno**
+   
+   Crea un archivo `.env` en la raíz del proyecto:
+   ```env
+   # WooCommerce Configuration
+   WOOCOMMERCE_URL=https://tu-tienda.com
+   WOOCOMMERCE_CONSUMER_KEY=ck_tu_consumer_key
+   WOOCOMMERCE_CONSUMER_SECRET=cs_tu_consumer_secret
+   
+   # WhatsApp Configuration
+   NUXT_PUBLIC_WHATSAPP_NUMBER=573172613957
+   
+   # Supabase Configuration (opcional)
+   SUPABASE_URL=tu_supabase_url
+   SUPABASE_ANON_KEY=tu_supabase_anon_key
+   ```
+
+4. **Ejecutar en desarrollo**
+   ```bash
+   npm run dev
+   ```
+
+## ⚙️ Configuración de WooCommerce
+
+1. **Habilitar API REST**:
+   - Ve a WooCommerce > Ajustes > Avanzado > API REST
+   - Habilita la API REST
+
+2. **Crear claves de API**:
+   - Ve a WooCommerce > Ajustes > Avanzado > Claves API REST
+   - Crea una nueva clave con permisos de "Lectura"
+   - Copia el Consumer Key y Consumer Secret al archivo `.env`
+
+3. **Configurar productos y categorías**:
+   - Crea tus productos en WooCommerce
+   - Organiza en categorías (evita usar "Sin categorizar")
+
+## 📱 Configuración de WhatsApp
+
+1. **Número de WhatsApp**:
+   - Actualiza `NUXT_PUBLIC_WHATSAPP_NUMBER` con tu número
+   - Formato: Código país + número (ejemplo: 573172613957)
+
+2. **Mensaje personalizado**:
+   - Los mensajes se formatean automáticamente
+   - Incluyen datos del cliente y productos seleccionados
+
+## 🏗️ Estructura del Proyecto
+
+```
+project/
+├── components/          # Componentes Vue reutilizables
+│   ├── CartSidebar.vue
+│   ├── CheckoutModal.vue
+│   ├── Footer.vue
+│   └── ProductCard.vue
+├── composables/         # Lógica de negocio reutilizable
+│   ├── useProducts.ts
+│   └── useQuotations.ts
+├── pages/              # Rutas de la aplicación
+│   ├── admin.vue
+│   └── index.vue
+├── server/             # API server-side
+│   └── api/
+│       └── woocommerce/
+├── stores/             # Estado global con Pinia
+│   └── cart.ts
+└── utils/              # Utilidades
+    └── supabase.ts
+```
+
+## 🎨 Personalización
+
+### Cambiar Nombre de la Tienda
+```vue
+<!-- En pages/index.vue -->
+<h1 class="text-4xl font-bold tracking-wider">TU NOMBRE</h1>
+```
+
+### Modificar Colores
+```css
+/* Los colores principales están en Tailwind classes */
+/* Busca: bg-indigo-600, bg-black, text-white, etc. */
+```
+
+### Agregar Nuevas Categorías
+- Las categorías se cargan automáticamente desde WooCommerce
+- Solo crea nuevas categorías en tu panel de WooCommerce
+
+## 🚀 Despliegue
+
+### Vercel (Recomendado)
+```bash
+npm install -g vercel
+vercel --prod
+```
+
+### Netlify
+```bash
+npm run build
+# Sube la carpeta .output/public
+```
+
+### Servidor VPS
+```bash
+npm run build
+pm2 start ecosystem.config.js
+```
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - mira el archivo [LICENSE](LICENSE) para detalles.
+
+## 📞 Soporte
+
+- **WhatsApp**: +57 317 261 3957
+- **Issues**: [GitHub Issues](https://github.com/oswy09/diana-store/issues)
+
+---
+
+### 🎯 Próximas Funcionalidades
+
+- [ ] Panel de administración completo
+- [ ] Integración con pagos en línea
+- [ ] Sistema de inventario en tiempo real
+- [ ] Notificaciones push
+- [ ] Multi-idioma
+- [ ] Sistema de descuentos
+
+---
+
+**Hecho con ❤️ para pequeños emprendedores que quieren vender online de manera simple y efectiva.**
 
 ## Características
 
