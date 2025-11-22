@@ -57,10 +57,9 @@ export const useProducts = () => {
       const wooKey = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_KEY
       const wooSecret = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_SECRET
 
-      if (!wooUrl || !wooKey || !wooSecret || wooUrl.includes('tu-tienda.com')) {
-        // Usar productos de ejemplo
-        console.log('Usando productos de ejemplo - configura WooCommerce en .env para productos reales')
-        await new Promise(resolve => setTimeout(resolve, 500)) // Simular carga
+      if (!wooUrl || !wooKey || !wooSecret) {
+        console.log('Configuración de WooCommerce no encontrada, usando productos de ejemplo')
+        await new Promise(resolve => setTimeout(resolve, 500))
         products.value = sampleProducts
         totalPages.value = 1
         currentPage.value = 1
@@ -68,35 +67,63 @@ export const useProducts = () => {
       }
 
       // Construir URL para WooCommerce
-      let url = `${wooUrl}/wp-json/wc/v3/products?consumer_key=${wooKey}&consumer_secret=${wooSecret}&page=${page}&per_page=12`
+      let url
+      
+      if (import.meta.env.DEV) {
+        // En desarrollo, usar el proxy de Vite
+        url = `/api/wc/v3/products?consumer_key=${wooKey}&consumer_secret=${wooSecret}&page=${page}&per_page=12`
+      } else {
+        // En producción, usar URL directa
+        url = `${wooUrl}/wp-json/wc/v3/products?consumer_key=${wooKey}&consumer_secret=${wooSecret}&page=${page}&per_page=12`
+      }
       
       if (category) {
         url += `&category=${category}`
       }
 
-      const response = await fetch(url)
+      console.log('Llamando a WooCommerce API:', url.replace(wooKey, '***').replace(wooSecret, '***'))
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      })
+      
+      console.log('Respuesta de WooCommerce:', response.status, response.statusText)
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
       }
       
       const data = await response.json()
+      console.log('Productos obtenidos:', data.length)
 
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         products.value = data
         currentPage.value = page
         
         // Obtener total de páginas de los headers
-        const totalProducts = parseInt(response.headers.get('X-WP-Total') || '0')
+        const totalProducts = parseInt(response.headers.get('X-WP-Total') || data.length.toString())
         totalPages.value = Math.ceil(totalProducts / 12)
+        
+        console.log(`Cargados ${data.length} productos de ${totalProducts} totales`)
       } else {
-        throw new Error('Formato de respuesta inválido')
+        console.warn('API devolvió datos vacíos, usando productos de ejemplo')
+        products.value = sampleProducts
+        totalPages.value = 1
+        currentPage.value = 1
       }
     } catch (err) {
-      console.error('Error fetching products:', err)
-      error.value = 'Error al cargar productos. Usando productos de ejemplo.'
+      console.error('Error detallado fetching products:', err)
+      error.value = `Error de conexión con WooCommerce: ${err.message}`
       
       // Mostrar productos de ejemplo en caso de error
+      console.log('Usando productos de ejemplo debido al error')
       products.value = sampleProducts
       totalPages.value = 1
       currentPage.value = 1

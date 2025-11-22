@@ -61,23 +61,30 @@
         <p class="mt-4 text-gray-600">Cargando productos...</p>
       </div>
 
-      <div v-else-if="error" class="text-center py-20">
+      <div v-else-if="error && products.length === 0" class="text-center py-20">
         <p class="text-red-600 mb-4">{{ error }}</p>
         <button @click="loadProducts" class="bg-black text-white px-6 py-3 hover:bg-gray-800">
           Reintentar
         </button>
       </div>
 
-      <div v-else-if="products.length === 0" class="text-center py-20">
+      <div v-else-if="!loading && products.length === 0" class="text-center py-20">
         <p class="text-gray-600 text-lg">No hay productos disponibles</p>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <ProductCard
-          v-for="product in products"
-          :key="product.id"
-          :product="product"
-        />
+      <div v-else>
+        <!-- Mostrar mensaje de error pero seguir mostrando productos -->
+        <div v-if="error" class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-6">
+          <p class="text-sm">{{ error }}</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <ProductCard
+            v-for="product in products"
+            :key="product.id"
+            :product="product"
+          />
+        </div>
       </div>
     </main>
 
@@ -125,7 +132,16 @@ const loadCategories = async () => {
     }
 
     // Llamada real a WooCommerce
-    const response = await fetch(`${wooUrl}/wp-json/wc/v3/products/categories?consumer_key=${wooKey}&consumer_secret=${wooSecret}`)
+    let url
+    if (import.meta.env.DEV) {
+      // En desarrollo, usar proxy
+      url = `/api/wc/v3/products/categories?consumer_key=${wooKey}&consumer_secret=${wooSecret}`
+    } else {
+      // En producción, usar URL directa
+      url = `${wooUrl}/wp-json/wc/v3/products/categories?consumer_key=${wooKey}&consumer_secret=${wooSecret}`
+    }
+    
+    const response = await fetch(url)
     
     if (!response.ok) {
       throw new Error('Error al cargar categorías')
