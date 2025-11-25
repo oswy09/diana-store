@@ -117,102 +117,108 @@ const loadProductVariations = async (selectedColor) => {
     const wooSecret = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_SECRET
 
     if (!wooUrl || !wooKey || !wooSecret) {
+      console.warn('⚠️ Faltan credenciales de WooCommerce')
       imageLoading.value = false
       return
     }
 
     let url
     if (import.meta.env.DEV) {
-      // En desarrollo, usar proxy
       url = `/api/wc/v3/products/${props.product.id}/variations?consumer_key=${wooKey}&consumer_secret=${wooSecret}`
     } else {
-      // En producción, usar URL directa
       url = `${wooUrl}/wp-json/wc/v3/products/${props.product.id}/variations?consumer_key=${wooKey}&consumer_secret=${wooSecret}`
     }
 
+    console.log('🌐 Cargando variaciones desde API...')
+    
     const response = await fetch(url)
-    if (response.ok) {
-      const variations = await response.json()
-      productVariations.value = variations
-      
-      // Buscar la variación correspondiente al color seleccionado
-      const matchingVariation = variations.find(v => {
-        const colorAttr = v.attributes?.find(a => 
-          a.name?.toLowerCase().includes('color') || 
-          a.slug?.toLowerCase().includes('color')
-        )
-        return colorAttr && colorAttr.option?.toLowerCase() === selectedColor.toLowerCase()
-      })
-      
-      if (matchingVariation && matchingVariation.image?.src) {
-        setTimeout(() => {
-          currentImage.value = matchingVariation.image.src
-          imageLoading.value = false
-        }, 200)
-      } else {
-        imageLoading.value = false
-      }
-    } else {
+    
+    if (!response.ok) {
+      console.error('❌ Error al cargar variaciones:', response.status)
       imageLoading.value = false
+      return
     }
-  } catch (error) {
-    console.warn('No se pudieron cargar las variaciones:', error)
-    imageLoading.value = false
-  }
-}
-
-const selectColor = (color) => {
-  selectedOptions.value['Color'] = color
-  imageLoading.value = true
-  
-  // Método 1: Si el producto tiene múltiples imágenes, rotar entre ellas
-  if (props.product.images && props.product.images.length > 1) {
-    const colorIndex = props.product.attributes
-      ?.find(attr => attr.name.toLowerCase() === 'color')
-      ?.options?.indexOf(color) || 0
     
-    const imageIndex = Math.min(colorIndex, props.product.images.length - 1)
-    const newImage = props.product.images[imageIndex]?.src || props.product.images[0]?.src
+    const variations = await response.json()
+    productVariations.value = variations
     
-    // Cambiar imagen con un pequeño delay para el efecto visual
-    setTimeout(() => {
-      currentImage.value = newImage
-      imageLoading.value = false
-    }, 200)
-  }
-  
-  // Método 2: Si tiene variaciones cargadas, usar la imagen de la variación
-  else if (props.product.variations && props.product.variations.length > 0) {
-    const variation = props.product.variations.find(v => {
-      const colorAttr = v.attributes?.find(a => {
-        const attrName = a.name?.toLowerCase() || ''
-        return attrName.includes('color') || attrName.includes('pa_color')
-      })
+    console.log(`✅ ${variations.length} variaciones cargadas`)
+    
+    // Buscar la variación correspondiente al color seleccionado
+    const matchingVariation = variations.find(v => {
+      const colorAttr = v.attributes?.find(a => 
+        a.name?.toLowerCase().includes('color') || 
+        a.slug?.toLowerCase().includes('color') ||
+        a.slug === 'pa_color'
+      )
       
       if (colorAttr) {
-        const optionValue = (colorAttr.option || '').toLowerCase().trim()
-        const selectedColor = color.toLowerCase().trim()
-        return optionValue === selectedColor
+        const optionNormalized = (colorAttr.option || '').toLowerCase().trim()
+        const selectedNormalized = selectedColor.toLowerCase().trim()
+        return optionNormalized === selectedNormalized
       }
       return false
     })
     
-    if (variation && variation.image?.src) {
-      setTimeout(() => {
-        currentImage.value = variation.image.src
+    if (matchingVariation) {
+      console.log('✨ Variación encontrada:', matchingVariation.name)
+      console.log('🖼️ Imagen:', matchingVariation.image?.src)
+      
+      if (matchingVariation.image?.src) {
+        setTimeout(() => {
+          currentImage.value = matchingVariation.image.src
+          imageLoading.value = false
+          console.log('✅ Imagen actualizada exitosamente')
+        }, 200)
+      } else {
+        console.warn('⚠️ La variación no tiene imagen')
         imageLoading.value = false
-      }, 200)
+      }
     } else {
+      console.warn('⚠️ No se encontró variación para el color:', selectedColor)
       imageLoading.value = false
     }
-  }
-  
-  // Método 3: Cargar variaciones dinámicamente si es necesario
-  else if (props.product.type === 'variable' && !props.product.variationsLoaded) {
-    loadProductVariations(color)
-  } else {
+  } catch (error) {
+    console.error('❌ Error al cargar variaciones:', error)
     imageLoading.value = false
   }
+}
+
+const selectColor = async (color) => {
+  selectedOptions.value['Color'] = color
+  imageLoading.value = true
+  
+  console.log('🎨 Color seleccionado:', color)
+  console.log('📦 Producto:', props.product.name, 'ID:', props.product.id)
+  console.log('🖼️ Imágenes disponibles:', props.product.images?.length || 0)
+  
+  // Método 1: Si el producto tiene múltiples imágenes, rotar entre ellas
+  if (props.product.images && props.product.images.length > 1) {
+    const colorAttr = props.product.attributes?.find(attr => attr.name.toLowerCase() === 'color')
+    const colorIndex = colorAttr?.options?.indexOf(color) || 0
+    
+    const imageIndex = Math.min(colorIndex, props.product.images.length - 1)
+    const newImage = props.product.images[imageIndex]?.src || props.product.images[0]?.src
+    
+    console.log('📷 Método 1: Usando imagen del índice', imageIndex)
+    
+    setTimeout(() => {
+      currentImage.value = newImage
+      imageLoading.value = false
+    }, 200)
+    return
+  }
+  
+  // Método 2: Si es un producto variable, cargar variaciones
+  if (props.product.type === 'variable') {
+    console.log('🔄 Producto variable detectado, cargando variaciones...')
+    await loadProductVariations(color)
+    return
+  }
+  
+  // Si no hay imágenes múltiples ni variaciones, mantener imagen original
+  console.log('⚠️ No se encontraron imágenes alternativas')
+  imageLoading.value = false
 }
 
 // Manejar errores de carga de imagen
