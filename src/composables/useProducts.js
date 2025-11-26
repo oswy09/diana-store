@@ -52,19 +52,10 @@ export const useProducts = () => {
     error.value = null
 
     try {
-      // Verificar si tenemos configuración de WooCommerce
-      const wooUrl = import.meta.env.VITE_WOOCOMMERCE_URL
-      const wooKey = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_KEY
-      const wooSecret = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_SECRET
-
-      if (!wooUrl || !wooKey || !wooSecret) {
-        console.log('Configuración de WooCommerce no encontrada, usando productos de ejemplo')
-        await new Promise(resolve => setTimeout(resolve, 500))
-        products.value = sampleProducts
-        totalPages.value = 1
-        currentPage.value = 1
-        return
-      }
+      // Configuración de WooCommerce
+      const wooUrl = import.meta.env.VITE_WOOCOMMERCE_URL || 'https://productdi.site'
+      const wooKey = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_KEY || 'ck_d1a11a415793897c8d984ad4f89d394ff132c303'
+      const wooSecret = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_SECRET || 'cs_d12e0364614bd6223b41f73657e7be443b120bde'
 
       // Construir URL para WooCommerce
       let url

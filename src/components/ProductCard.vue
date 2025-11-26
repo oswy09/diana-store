@@ -112,15 +112,9 @@ const isFormComplete = computed(() => {
 // Función para cargar variaciones del producto
 const loadProductVariations = async (selectedColor) => {
   try {
-    const wooUrl = import.meta.env.VITE_WOOCOMMERCE_URL
-    const wooKey = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_KEY
-    const wooSecret = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_SECRET
-
-    if (!wooUrl || !wooKey || !wooSecret) {
-      console.warn('⚠️ Faltan credenciales de WooCommerce')
-      imageLoading.value = false
-      return
-    }
+    const wooUrl = import.meta.env.VITE_WOOCOMMERCE_URL || 'https://productdi.site'
+    const wooKey = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_KEY || 'ck_d1a11a415793897c8d984ad4f89d394ff132c303'
+    const wooSecret = import.meta.env.VITE_WOOCOMMERCE_CONSUMER_SECRET || 'cs_d12e0364614bd6223b41f73657e7be443b120bde'
 
     let url
     if (import.meta.env.DEV) {
